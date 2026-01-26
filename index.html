@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Inventario</title>
+  <script src="js/app.js" defer></script>
+  <link rel="stylesheet" href="css/style.css">
+
+
+</head>
+
+<body>
+  <h1>Simulador de Inventario</h1>
+
+  <p>
+   Este simulador permite gestionar un inventario básico para un emprendimiento.
+  El usuario puede agregar productos y modificar el stock mediante una interfaz
+  web interactiva desarrollada con HTML, CSS y JavaScript.
+  </p>
+
+
+  <form id="formProducto">
+    <input type="text" id="nombreProducto" placeholder="Nombre del producto" required>
+    <input type="number" id="cantidadProducto" placeholder="Cantidad" required>
+    <button type="submit">Agregar producto</button>
+  </form>
+
+  <div id="listaProductos"></div>
+
+
+
+</body>
+
+</html>
