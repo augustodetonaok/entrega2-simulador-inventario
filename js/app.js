@@ -1,5 +1,3 @@
-document.addEventListener("DOMContentLoaded", function () {
-
   let productos = [];
 
   const formProducto = document.getElementById("formProducto");
@@ -13,10 +11,11 @@ document.addEventListener("DOMContentLoaded", function () {
     mostrarProductos();
   }
 
-  function crearProducto(nombre, cantidad) {
+  function crearProducto(nombre, cantidad, precio) {
     return {
       nombre: nombre,
-      cantidad: cantidad
+      cantidad: cantidad,
+      precio: precio
     };
   }
 
@@ -33,108 +32,110 @@ document.addEventListener("DOMContentLoaded", function () {
 }
 
 
-  formProducto.addEventListener("submit", function (evento) {
+formProducto.addEventListener("submit", function (evento) {
     evento.preventDefault();
 
     const nombre = document.getElementById("nombreProducto").value;
-    let cantidad = document.getElementById("cantidadProducto").value;
+    const cantidad = parseInt(document.getElementById("cantidadProducto").value);
+    const precio = parseFloat(document.getElementById("precioProducto").value);
 
-    cantidad = parseInt(cantidad);
-
-    agregarProducto(nombre, cantidad);
+    agregarProducto(nombre, cantidad, precio);
     formProducto.reset();
-  });
 
-  function agregarProducto(nombre, cantidad) {
-    let productoExistente = null;
+});
 
-    for (let i = 0; i < productos.length; i++) {
-      if (productos[i].nombre === nombre) {
-        productoExistente = productos[i];
-      }
-    }
+
+function agregarProducto(nombre, cantidad, precio) {
+    let productoExistente = productos.find(p => p.nombre === nombre);
 
     if (productoExistente) {
-      productoExistente.cantidad += cantidad;
+        productoExistente.cantidad += cantidad;
+        productoExistente.precio = precio; // actualiza precio
     } else {
-      const producto = crearProducto(nombre, cantidad);
-      productos.push(producto);
+        const producto = crearProducto(nombre, cantidad, precio);
+        productos.push(producto);
     }
 
-    ordenarProductos();
-    localStorage.setItem("productos", JSON.stringify(productos));
-    mostrarProductos();
-  }
-
-  function mostrarProductos() {
-    listaProductos.innerHTML = "";
-
-    for (let i = 0; i < productos.length; i++) {
-      const producto = productos[i];
-
-      const div = document.createElement("div");
-
-      const nombre = document.createElement("strong");
-      nombre.textContent = producto.nombre;
-
-      const stock = document.createElement("p");
-      stock.textContent = "Stock: " + producto.cantidad;
-
-      const btnSumar = document.createElement("button");
-      btnSumar.textContent = "+";
-
-      const btnRestar = document.createElement("button");
-      btnRestar.textContent = "-";
-
-      btnSumar.addEventListener("click", function () {
-        sumarStock(i);
-      });
-
-      btnRestar.addEventListener("click", function () {
-        restarStock(i);
-      });
-
-      const btnEliminar = document.createElement("button");
-      btnEliminar.textContent = "Eliminar";
-
-      btnEliminar.addEventListener("click", function () {
-        eliminarProducto(i);
-      });
-
-      div.appendChild(nombre);
-      div.appendChild(stock);
-      div.appendChild(btnSumar);
-      div.appendChild(btnRestar);
-      div.appendChild(btnEliminar);
-
-
-      listaProductos.appendChild(div);
-    }
-  }
-
-  function sumarStock(indice) {
-    productos[indice].cantidad += 1;
-
-    localStorage.setItem("productos", JSON.stringify(productos));
-    mostrarProductos();
-  }
-
-  function restarStock(indice) {
-    if (productos[indice].cantidad > 0) {
-      productos[indice].cantidad -= 1;
-
-      localStorage.setItem("productos", JSON.stringify(productos));
-      mostrarProductos();
-    }
-  }
-
-  function eliminarProducto(indice) {
-    productos.splice(indice, 1);
-
-    localStorage.setItem("productos", JSON.stringify(productos));
+    guardarProductos();
     mostrarProductos();
 }
 
 
+function mostrarProductos() {
+    listaProductos.innerHTML = "";
 
-});
+    productos.forEach((producto, indice) => {
+        const div = document.createElement("div");
+
+        div.classList.add("producto-item");
+
+        div.innerHTML = `
+            <p>
+                <strong>${producto.nombre}</strong><br>
+                Stock: ${producto.cantidad}<br>
+                Precio: $${producto.precio}
+            </p>
+            <div class="botones">
+                <button onclick="sumarStock(${indice})">➕</button>
+                <button onclick="restarStock(${indice})">➖</button>
+                <button onclick="eliminarProducto(${indice})">🗑</button>
+            </div>
+        `;
+
+        listaProductos.appendChild(div);
+    });
+    calcularValorTotal();
+
+}
+
+
+function sumarStock(indice) {
+    productos[indice].cantidad += 1;
+    guardarProductos();
+    mostrarProductos();
+}
+
+function restarStock(indice) {
+    if (productos[indice].cantidad > 0) {
+        productos[indice].cantidad -= 1;
+        guardarProductos();
+        mostrarProductos();
+    }
+}
+
+function eliminarProducto(indice) {
+    productos.splice(indice, 1);
+    guardarProductos();
+    mostrarProductos();
+}
+
+function guardarProductos() {
+    localStorage.setItem("productos", JSON.stringify(productos));
+    ordenarProductos();
+}
+
+function calcularValorTotal() {
+    let total = 0;
+
+    productos.forEach(producto => {
+        total += producto.cantidad * producto.precio;
+    });
+
+    document.getElementById("valorTotal").textContent =
+        "Valor total del inventario: $" + total.toLocaleString();
+}
+
+
+
+if (productosGuardados) {
+  productos = JSON.parse(productosGuardados);
+
+  productos.forEach(p => {
+    if (!p.precio) {
+      p.precio = 0;
+    }
+  });
+
+  ordenarProductos();
+  mostrarProductos();
+}

@@ -40,3 +40,17 @@ button {
 #listaProductos button:last-child {
     margin-left: 10px;
 }
+
+.producto-item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.botones button {
+    margin-right: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
