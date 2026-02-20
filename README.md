@@ -1,14 +1,23 @@
-# Simulador de Inventario
-Proyecto realizado en JavaScript como Entrega N°2.
+# Simulador de Inventario y Ventas
+
+Proyecto final desarrollado en JavaScript.
 
 ## Funcionalidades
-- Agregar productos al inventario
-- Sumar stock a productos existentes
-- Eliminar productos
-- Ordenar productos alfabéticamente
-- Persistencia con localStorage
+
+✅ Gestión de inventario  
+✅ Carrito de compras  
+✅ Control de stock  
+✅ Persistencia con LocalStorage  
+✅ Carga de productos desde JSON  
+✅ Interfaz interactiva  
 
 ## Tecnologías
+
 - HTML
 - CSS
 - JavaScript
+- SweetAlert2
+
+## Autor
+
+Augusto Detona
