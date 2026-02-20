@@ -4,12 +4,12 @@ Proyecto final desarrollado en JavaScript.
 
 ## Funcionalidades
 
-✅ Gestión de inventario  
-✅ Carrito de compras  
-✅ Control de stock  
-✅ Persistencia con LocalStorage  
-✅ Carga de productos desde JSON  
-✅ Interfaz interactiva  
+- Gestión de inventario  
+- Carrito de compras  
+- Control de stock  
+- Persistencia con LocalStorage  
+- Carga de productos desde JSON  
+- Interfaz interactiva  
 
 ## Tecnologías
 
