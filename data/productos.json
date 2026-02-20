@@ -1,0 +1,8 @@
+[
+  { "nombre": "Mate imperial", "cantidad": 5, "precio": 30000 },
+  { "nombre": "Bombilla acero", "cantidad": 10, "precio": 4500 },
+  { "nombre": "Yerba premium", "cantidad": 8, "precio": 6000 },
+  { "nombre": "Mate camionero", "cantidad": 5, "precio": 20000 },
+  { "nombre": "Bombilla alpaca", "cantidad": 10, "precio": 9000 },
+  { "nombre": "Termo media manija", "cantidad": 8, "precio": 25000 }
+]

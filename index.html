@@ -1,42 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Inventario</title>
   <script src="js/app.js" defer></script>
   <link rel="stylesheet" href="css/style.css">
-
-
 </head>
 
 <body>
-  <h1>Simulador de Inventario</h1>
 
-  <p>
-    Este simulador permite gestionar un inventario básico para un emprendimiento.
-    El usuario puede agregar productos y modificar el stock mediante una interfaz
-    web interactiva desarrollada con HTML, CSS y JavaScript.
-  </p>
+  <div class="contenedor-principal">
 
+    <div class="inventario">
+      <h2>📦 Inventario</h2>
 
-  <form id="formProducto">
-    <input type="text" id="nombreProducto" placeholder="Nombre del producto" required>
-    <input type="number" id="cantidadProducto" placeholder="Cantidad" required>
-    <input type="number" id="precioProducto" placeholder="Precio" required>
-    <button type="submit">Agregar producto</button>
-  </form>
+      <form id="formProducto">
+        <input type="text" id="nombreProducto" placeholder="Nombre del producto" required>
+        <input type="number" id="cantidadProducto" placeholder="Cantidad" required>
+        <input type="number" id="precioProducto" placeholder="Precio" required>
+        <button type="submit">Agregar producto</button>
+      </form>
 
-  <h2 id="valorTotal">Valor total del inventario: $0</h2>
+      <h2 id="valorTotal">Valor total del inventario: $0</h2>
+      <h2 id="totalVendido">Total vendido: $0</h2>
 
-
-
-
-  <div id="listaProductos"></div>
+      <div id="listaProductos"></div>
+    </div>
 
 
+    <div class="carrito">
+      <h2>🛒 Carrito</h2>
+
+      <div id="carritoLista"></div>
+      <h3 id="subtotalCarrito">Subtotal: $0</h3>
+      <button id="btnCobrar">Cobrar</button>
+    </div>
+
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
-
 </html>
