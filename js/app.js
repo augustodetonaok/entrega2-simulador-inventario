@@ -15,12 +15,43 @@ async function cargarProductosIniciales() {
 }
 
 let productos = [];
-let totalVendido = 0;
 let carrito = [];
-
+let historialVentas = JSON.parse(localStorage.getItem("historialVentas")) || [];
+let ventasDelDia = JSON.parse(localStorage.getItem("ventasDelDia")) || [];
 
 const formProducto = document.getElementById("formProducto");
-const listaProductos = document.getElementById("listaProductos");
+const listaProductosStock = document.getElementById("listaProductosStock");
+const listaProductosVentas = document.getElementById("listaProductosVentas");
+const nombreProducto = document.getElementById("nombreProducto");
+const productosDatalist = document.getElementById("productosDatalist");
+const cantidadProducto = document.getElementById("cantidadProducto");
+const precioProducto = document.getElementById("precioProducto");
+const subtotalCarrito = document.getElementById("subtotalCarrito");
+const btnCobrar = document.getElementById("btnCobrar");
+const searchStock = document.getElementById("searchStock");
+const searchVentas = document.getElementById("searchVentas");
+
+// menu / vistas
+const menuStock = document.getElementById("menuStock");
+const menuVentas = document.getElementById("menuVentas");
+const menuCaja = document.getElementById("menuCaja");
+
+function showView(viewId) {
+    // ocultar todas las vistas
+    document.querySelectorAll('.vista').forEach(v => v.style.display = 'none');
+    const view = document.getElementById(viewId);
+    // restaurar el display por defecto (dejar que el CSS decida, p.ej. display:flex en #view-ventas)
+    if (view) view.style.display = '';
+}
+
+// conectar botones del menú
+if (menuStock) menuStock.addEventListener('click', () => showView('view-stock'));
+if (menuVentas) menuVentas.addEventListener('click', () => showView('view-ventas'));
+if (menuCaja) menuCaja.addEventListener('click', () => showView('view-caja'));
+
+// buscar en stock y ventas
+if (searchStock) searchStock.addEventListener('input', mostrarProductos);
+if (searchVentas) searchVentas.addEventListener('input', mostrarProductos);
 
 
 // CARGA DESDE STORAGE
@@ -39,17 +70,13 @@ if (productosGuardados) {
     ordenarProductos();
     guardarProductos();
     mostrarProductos();
+    mostrarResumenDiario();
 } else {
     cargarProductosIniciales();
 }
 
-
-
-const ventasGuardadas = localStorage.getItem("ventas");
-
-if (ventasGuardadas) {
-    totalVendido = parseFloat(ventasGuardadas);
-}
+// inicializar datalist si existe
+if (typeof actualizarDatalist === 'function') actualizarDatalist();
 
 // UTILIDADES
 
@@ -66,11 +93,18 @@ function ordenarProductos() {
 
 function guardarProductos() {
     localStorage.setItem("productos", JSON.stringify(productos));
+    // actualizar datalist de autocompletado
+    if (typeof actualizarDatalist === 'function') actualizarDatalist();
 }
 
-function mostrarTotalVendido() {
-    document.getElementById("totalVendido").textContent =
-        "Total vendido: $" + totalVendido.toLocaleString();
+function actualizarDatalist() {
+    if (!productosDatalist) return;
+    productosDatalist.innerHTML = '';
+    productos.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.nombre;
+        productosDatalist.appendChild(option);
+    });
 }
 
 function calcularValorTotal() {
@@ -90,17 +124,38 @@ formProducto.addEventListener("submit", e => {
     const cantidad = parseInt(cantidadProducto.value);
     const precio = parseFloat(precioProducto.value);
 
-    agregarProducto(nombre, cantidad, precio);
+    // normalizar nombre para evitar duplicados por mayúsculas/spaces
+    const nombreNorm = nombre.toLowerCase();
+
+    agregarProducto(nombreNorm, cantidad, precio);
     formProducto.reset();
 });
 
+// autocompletado: si el nombre coincide exactamente con un producto existente, completar el precio
+if (nombreProducto) {
+    nombreProducto.addEventListener('input', () => {
+        const val = nombreProducto.value.trim().toLowerCase();
+        if (!val) return;
+        const match = productos.find(p => p.nombre.trim().toLowerCase() === val);
+        if (match) {
+            // solo completar precio si el campo está vacío o es 0
+            if (precioProducto && (!precioProducto.value || precioProducto.value == 0)) {
+                precioProducto.value = match.precio;
+            }
+        }
+    });
+}
+
 function agregarProducto(nombre, cantidad, precio) {
-    let existente = productos.find(p => p.nombre === nombre);
+    // buscar por nombre normalizado (trim + toLowerCase)
+    const nombreNorm = nombre.trim().toLowerCase();
+    let existente = productos.find(p => p.nombre.trim().toLowerCase() === nombreNorm);
 
     if (existente) {
         existente.cantidad += cantidad;
         existente.precio = precio;
     } else {
+        // conservar el nombre como ingresado (capitalización original)
         productos.push(crearProducto(nombre, cantidad, precio));
     }
 
@@ -122,30 +177,118 @@ function agregarProducto(nombre, cantidad, precio) {
 
 
 function mostrarProductos() {
-    listaProductos.innerHTML = "";
+    // Limpiar ambas listas (stock y ventas)
+    if (listaProductosStock) listaProductosStock.innerHTML = "";
+    if (listaProductosVentas) listaProductosVentas.innerHTML = "";
 
-    productos.forEach((producto, i) => {
-        const div = document.createElement("div");
-        div.classList.add("producto-item");
+    const searchTermStock = searchStock ? searchStock.value.trim().toLowerCase() : '';
+    const searchTermVentas = searchVentas ? searchVentas.value.trim().toLowerCase() : '';
 
-        div.innerHTML = `
-            <p>
-                <strong>${producto.nombre}</strong><br>
-                Stock: ${producto.cantidad}<br>
-                Precio: $${producto.precio}
-            </p>
-            <div class="botones">
-                <button onclick="sumarStock(${i})">➕</button>
-                <button onclick="restarStock(${i})">➖</button>
-                <button onclick="agregarAlCarrito(${i})">🛒</button>
-                <button onclick="eliminarProducto(${i})">🗑</button>
-            </div>
-        `;
-        listaProductos.appendChild(div);
+    // ITEMS PARA STOCK
+    const itemsStock = productos
+        .map((p, idx) => ({ p, idx }))
+        .filter(({ p }) => p.nombre.toLowerCase().includes(searchTermStock));
+
+    itemsStock.forEach(({ p: producto, idx: i }) => {
+        const itemStock = document.createElement("div");
+        itemStock.classList.add("producto-item");
+
+        const pStock = document.createElement('p');
+        const strongStock = document.createElement('strong');
+        strongStock.textContent = producto.nombre;
+        pStock.appendChild(strongStock);
+        pStock.appendChild(document.createElement('br'));
+        pStock.appendChild(document.createTextNode('Stock: ' + producto.cantidad));
+        pStock.appendChild(document.createElement('br'));
+        pStock.appendChild(document.createTextNode('Precio: $' + producto.precio.toLocaleString()));
+
+        const botonesStock = document.createElement('div');
+        botonesStock.classList.add('botones');
+
+        const btnSum = document.createElement('button'); btnSum.textContent = '➕'; btnSum.setAttribute('onclick', `sumarStock(${i})`);
+        const btnRest = document.createElement('button'); btnRest.textContent = '➖'; btnRest.setAttribute('onclick', `restarStock(${i})`);
+        const btnEdit = document.createElement('button'); btnEdit.textContent = 'Editar precio'; btnEdit.addEventListener('click', () => editarPrecio(i));
+        const btnDel = document.createElement('button'); btnDel.textContent = '🗑'; btnDel.setAttribute('onclick', `eliminarProducto(${i})`);
+
+        botonesStock.appendChild(btnSum);
+        botonesStock.appendChild(btnRest);
+        botonesStock.appendChild(btnEdit);
+        botonesStock.appendChild(btnDel);
+
+        itemStock.appendChild(pStock);
+        itemStock.appendChild(botonesStock);
+
+        if (listaProductosStock) listaProductosStock.appendChild(itemStock);
+    });
+
+    // ITEMS PARA VENTAS (lista a la izquierda en vista-ventas)
+    const itemsVentas = productos
+        .map((p, idx) => ({ p, idx }))
+        .filter(({ p }) => p.nombre.toLowerCase().includes(searchTermVentas));
+
+    itemsVentas.forEach(({ p: producto, idx: i }) => {
+        const itemVentas = document.createElement('div');
+        itemVentas.classList.add('producto-item');
+
+        const pVentas = document.createElement('p');
+        const strongVentas = document.createElement('strong');
+        strongVentas.textContent = producto.nombre;
+        pVentas.appendChild(strongVentas);
+        pVentas.appendChild(document.createElement('br'));
+        pVentas.appendChild(document.createTextNode('Stock: ' + producto.cantidad));
+        pVentas.appendChild(document.createElement('br'));
+        pVentas.appendChild(document.createTextNode('Precio: $' + producto.precio.toLocaleString()));
+
+        const botonesVentas = document.createElement('div');
+        botonesVentas.classList.add('botones');
+        const btnAddVenta = document.createElement('button'); btnAddVenta.textContent = '🛒 Agregar'; btnAddVenta.setAttribute('onclick', `agregarAlCarrito(${i})`);
+        botonesVentas.appendChild(btnAddVenta);
+
+        itemVentas.appendChild(pVentas);
+        itemVentas.appendChild(botonesVentas);
+
+        if (listaProductosVentas) listaProductosVentas.appendChild(itemVentas);
     });
 
     calcularValorTotal();
-    mostrarTotalVendido();
+}
+
+// Editar precio con SweetAlert
+function editarPrecio(i) {
+    const producto = productos[i];
+    if (!producto) return;
+
+    Swal.fire({
+        title: `Editar precio - ${producto.nombre}`,
+        input: 'number',
+        inputValue: producto.precio,
+        inputAttributes: {
+            min: 0,
+            step: '0.01'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Guardar'
+    }).then(result => {
+        if (!result.isConfirmed) return;
+        const nuevo = parseFloat(result.value);
+        if (isNaN(nuevo) || nuevo < 0) {
+            Swal.fire('Precio inválido', 'Ingrese un número válido mayor o igual a 0', 'error');
+            return;
+        }
+
+        producto.precio = nuevo;
+        guardarProductos();
+        mostrarProductos();
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Precio actualizado',
+            showConfirmButton: false,
+            timer: 1200
+        });
+    });
 }
 
 // STOCK
@@ -219,7 +362,7 @@ function mostrarCarrito() {
             <button onclick="disminuirCantidad(${i})">➖</button>
             ${item.cantidad}
             <button onclick="aumentarCantidad(${i})">➕</button><br>
-            Total: $${item.precio * item.cantidad}<br>
+            Total: $${(item.precio * item.cantidad).toLocaleString()}<br>
             <button onclick="quitarDelCarrito(${i})">❌ Quitar</button>
             <hr>
         `;
@@ -292,20 +435,30 @@ function cobrar() {
             total += item.precio * item.cantidad;
         });
 
-        totalVendido += total;
-
-        localStorage.setItem("ventas", totalVendido);
         guardarProductos();
 
+        const venta = {
+            fecha: new Date().toLocaleString(),
+            items: [...carrito],
+            total: total
+        };
+
+        historialVentas.push(venta);
+        ventasDelDia.push(venta);
+
+        localStorage.setItem("historialVentas", JSON.stringify(historialVentas));
+        localStorage.setItem("ventasDelDia", JSON.stringify(ventasDelDia));
         carrito = [];
 
         mostrarCarrito();
         mostrarProductos();
+        mostrarHistorial();
+        mostrarResumenDiario();
 
         Swal.fire({
             icon: "success",
             title: "Venta realizada",
-            text: `Se cobraron $${total}`,
+            text: `Se cobraron $${total.toLocaleString()}`,
             timer: 1500,
             showConfirmButton: false
         });
@@ -313,3 +466,72 @@ function cobrar() {
 }
 
 mostrarProductos();
+// Mostrar vista por defecto
+showView('view-ventas');
+
+function mostrarHistorial() {
+    const contenedor = document.getElementById("historialVentas");
+    contenedor.innerHTML = "";
+
+    historialVentas.slice().reverse().forEach(venta => {
+        const div = document.createElement("div");
+        div.classList.add("venta-item");
+
+        let itemsHTML = "";
+
+        venta.items.forEach(item => {
+            itemsHTML += `${item.nombre} x${item.cantidad}<br>`;
+        });
+
+        div.innerHTML = `
+            <strong>${venta.fecha}</strong><br>
+            ${itemsHTML}
+            Total: $${venta.total.toLocaleString()}
+            <hr>
+        `;
+
+        contenedor.appendChild(div);
+    });
+}
+mostrarHistorial();
+
+function mostrarResumenDiario() {
+    const totalVentas = ventasDelDia.reduce((acc, v) => acc + v.total, 0);
+    const cantidadVentas = ventasDelDia.length;
+    const ticketPromedio = cantidadVentas > 0
+        ? totalVentas / cantidadVentas
+        : 0;
+
+    document.getElementById("totalDia").textContent =
+        "Total del día: $" + totalVentas.toLocaleString();
+
+    document.getElementById("cantidadVentas").textContent =
+        "Ventas realizadas: " + cantidadVentas;
+
+    document.getElementById("ticketPromedio").textContent =
+        "Ticket promedio: $" + ticketPromedio.toFixed(2);
+}
+
+function cerrarCaja() {
+    if (ventasDelDia.length === 0) {
+        Swal.fire("No hay ventas para cerrar");
+        return;
+    }
+
+    Swal.fire({
+        title: "Cerrar caja",
+        text: "Se reiniciarán las estadísticas del día",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Cerrar caja"
+    }).then(result => {
+        if (!result.isConfirmed) return;
+
+        ventasDelDia = [];
+        localStorage.removeItem("ventasDelDia");
+
+        mostrarResumenDiario();
+
+        Swal.fire("Caja cerrada ✔");
+    });
+}

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,37 +10,80 @@
 </head>
 
 <body>
+  <header>
+    <nav class="menu">
+      <button id="menuStock">Stock</button>
+      <button id="menuVentas">Ventas</button>
+      <button id="menuCaja">Caja</button>
+    </nav>
+  </header>
 
-  <div class="contenedor-principal">
+  <main class="contenedor-principal">
 
-    <div class="inventario">
-      <h2>📦 Inventario</h2>
+    <!-- Vista: Stock (gestión de inventario) -->
+    <section id="view-stock" class="vista">
+      <div class="inventario">
+        <h2>📦 Inventario</h2>
 
-      <form id="formProducto">
-        <input type="text" id="nombreProducto" placeholder="Nombre del producto" required>
-        <input type="number" id="cantidadProducto" placeholder="Cantidad" required>
-        <input type="number" id="precioProducto" placeholder="Precio" required>
-        <button type="submit">Agregar producto</button>
-      </form>
+        <form id="formProducto">
+          <label for="nombreProducto">Nombre</label>
+          <input type="text" id="nombreProducto" list="productosDatalist" placeholder="Nombre del producto" required>
+          <datalist id="productosDatalist"></datalist>
+          <label for="cantidadProducto">Cantidad</label>
+          <input type="number" id="cantidadProducto" placeholder="Cantidad" required>
+          <label for="precioProducto">Precio</label>
+          <input type="number" id="precioProducto" placeholder="Precio" required>
+          <button type="submit">Agregar producto</button>
+        </form>
 
-      <h2 id="valorTotal">Valor total del inventario: $0</h2>
-      <h2 id="totalVendido">Total vendido: $0</h2>
+        <div class="buscador-stock">
+          <label for="searchStock">Buscar artículo</label>
+          <input type="search" id="searchStock" placeholder="Buscar por nombre..." aria-label="Buscar producto en stock">
+        </div>
 
-      <div id="listaProductos"></div>
-    </div>
+        <h2 id="valorTotal">Valor total del inventario: $0</h2>
+        <div id="listaProductosStock"></div>
+      </div>
+    </section>
 
+    <!-- Vista: Ventas (productos + carrito) -->
+    <section id="view-ventas" class="vista">
+      <div class="ventas">
+        <h2>🛍 Productos</h2>
+        <div class="buscador-ventas">
+          <label for="searchVentas">Buscar artículo</label>
+          <input type="search" id="searchVentas" placeholder="Buscar por nombre..." aria-label="Buscar producto en ventas">
+        </div>
+        <div id="listaProductosVentas"></div>
+      </div>
 
-    <div class="carrito">
-      <h2>🛒 Carrito</h2>
+      <aside class="carrito">
+        <h2>🛒 Carrito</h2>
+        <div id="carritoLista"></div>
+        <h3 id="subtotalCarrito">Subtotal: $0</h3>
+        <button id="btnCobrar">Cobrar</button>
+      </aside>
+    </section>
 
-      <div id="carritoLista"></div>
-      <h3 id="subtotalCarrito">Subtotal: $0</h3>
-      <button id="btnCobrar">Cobrar</button>
-    </div>
+    <!-- Vista: Caja (resumen y historial) -->
+    <section id="view-caja" class="vista">
+      <div class="resumen-dia">
+        <h3 id="totalDia">Total del día: $0</h3>
+        <h3 id="cantidadVentas">Ventas realizadas: 0</h3>
+        <h3 id="ticketPromedio">Ticket promedio: $0</h3>
+        <button onclick="cerrarCaja()">Cerrar caja</button>
+      </div>
 
-  </div>
-  
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      <div class="historial">
+        <h2>📊 Historial de ventas</h2>
+        <div id="historialVentas"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
+
 </html>

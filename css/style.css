@@ -74,6 +74,32 @@ button {
     margin-top: 20px;
 }
 
+/* Vista ventas: lista a la izquierda, carrito a la derecha */
+#view-ventas {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+
+.ventas {
+    /* columnas con igual ancho */
+    flex: 1;
+}
+
+.carrito {
+    flex: 1;
+    /* quitar max-width para que ambas columnas tengan el mismo ancho */
+    max-width: none;
+    margin-left: 20px;
+}
+
+/* asegurar que las tarjetas en la columna de ventas ocupen el ancho disponible */
+.ventas .producto-item {
+    max-width: none;
+    width: 100%;
+}
+
 
 .inventario {
     flex: 2;
